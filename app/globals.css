@@ -1,26 +1,93 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* GoFastrr Base Tokens */
+  --gf-primary: #0B7E63;
+  --gf-primary-hover: #085F4A;
+  --gf-primary-light: #12A882;
+  --gf-primary-pale: #E8F7F4;
+  --gf-primary-tint: #C9EDE6;
+
+  --gf-accent: #FF6B35;
+  --gf-accent-pale: #FFF0EB;
+
+  --gf-heading: #0B0B0B;
+  --gf-body: #1A1F2E;
+  --gf-muted: #888888;
+  --gf-border: #D8D6D6;
+
+  --gf-surface-alt: #F2F2F0;
+  --gf-page-bg: #FAFAF9;
+  --gf-card-bg: #FEFEFE;
+
+  --gf-success: #10B981;
+  --gf-warning: #F59E0B;
+  --gf-error: #EF4444;
+  --gf-info: #3B82F6;
+
+  /* Default Checkout Variables (can be overridden by merchant) */
+  --checkout-primary: var(--gf-primary);
+  --checkout-primary-hover: var(--gf-primary-hover);
+  --checkout-button-text: #ffffff;
+  --checkout-page-bg: var(--gf-page-bg);
+  --checkout-card-bg: var(--gf-card-bg);
+  --checkout-heading: var(--gf-heading);
+  --checkout-body: var(--gf-body);
+  --checkout-muted: var(--gf-muted);
+  --checkout-border: var(--gf-border);
+
+  /* Radii */
+  --checkout-radius-sm: 10px;
+  /* inputs/buttons */
+  --checkout-radius-md: 16px;
+  /* cards */
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  /* Merchant-customizable colors mapped for Tailwind utilities */
+  --color-brand-primary: var(--checkout-primary);
+  --color-brand-primary-hover: var(--checkout-primary-hover);
+  --color-brand-button-text: var(--checkout-button-text);
+
+  --color-brand-page-bg: var(--checkout-page-bg);
+  --color-brand-card-bg: var(--checkout-card-bg);
+
+  --color-brand-heading: var(--checkout-heading);
+  --color-brand-body: var(--checkout-body);
+  --color-brand-muted: var(--checkout-muted);
+  --color-brand-border: var(--checkout-border);
+
+  /* GoFastrr fixed colors for internal UI (offers, success, warnings) */
+  --color-gf-accent: var(--gf-accent);
+  --color-gf-accent-pale: var(--gf-accent-pale);
+  --color-gf-primary: var(--gf-primary);
+  --color-gf-primary-light: var(--gf-primary-light);
+  --color-gf-primary-pale: var(--gf-primary-pale);
+  --color-gf-primary-tint: var(--gf-primary-tint);
+  --color-gf-surface-alt: var(--gf-surface-alt);
+
+  --color-gf-success: var(--gf-success);
+  --color-gf-warning: var(--gf-warning);
+  --color-gf-error: var(--gf-error);
+  --color-gf-info: var(--gf-info);
+
+  /* Radius mapping */
+  --radius-checkout-sm: var(--checkout-radius-sm);
+  --radius-checkout-md: var(--checkout-radius-md);
+
+  /* Subtle green-tinted shadows for GoFastrr elements */
+  --shadow-checkout-sm: 0 1px 2px 0 rgba(11, 126, 99, 0.05);
+  --shadow-checkout-md: 0 4px 6px -1px rgba(11, 126, 99, 0.1), 0 2px 4px -1px rgba(11, 126, 99, 0.06);
+
+  /* Font mapping (if applicable) */
+  --font-sans: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--checkout-page-bg);
+  color: var(--checkout-body);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
