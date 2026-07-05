@@ -8,16 +8,16 @@
  */
 export default function CouponCardPlaceholder() {
   return (
-    <div className="bg-[#3C7E44]/10 border border-[#3C7E44]/20 rounded-[var(--checkout-radius-md)] px-4 py-3.5 flex items-center gap-3">
+    <div className="bg-[#3C7E44]/10 border border-[#3C7E44]/20 rounded-[var(--checkout-radius-md)] px-4 py-2.5 flex items-center gap-3">
       {/* Icon box */}
-      <div className="w-10 h-10 rounded-xl bg-[#3C7E44] flex items-center justify-center flex-shrink-0">
+      <div className="w-8 h-8 rounded-xl bg-[#3C7E44] flex items-center justify-center flex-shrink-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/icons/checkout/coupon.svg"
           alt=""
-          width={20}
-          height={20}
-          className="w-5 h-5"
+          width={16}
+          height={16}
+          className="w-4 h-4"
         />
       </div>
 
