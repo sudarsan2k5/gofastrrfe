@@ -17,15 +17,12 @@ interface OrderSummaryProps {
     totalPaise: number;
   };
   currency: string;
-  /** Mobile-collapsed mode: show only header row with total, hide line items */
-  collapsed?: boolean;
 }
 
 export default function OrderSummary({
   lineItems,
   totals,
   currency,
-  collapsed = false,
 }: OrderSummaryProps) {
   const itemCount = lineItems.reduce((sum, li) => sum + li.quantity, 0);
 
@@ -44,19 +41,16 @@ export default function OrderSummary({
         <div className="flex items-center gap-1.5 text-sm text-[var(--checkout-muted)]">
           <span>{itemCount} {itemCount === 1 ? "item" : "items"}</span>
           {/* On mobile-collapsed, show grand total */}
-          {collapsed && (
-            <span className="font-semibold text-[var(--checkout-heading)] ml-1">
-              {formatPaise(totals.totalPaise, currency)}
-            </span>
-          )}
+          <span className="font-semibold text-[var(--checkout-heading)] ml-1 md:hidden">
+            {formatPaise(totals.totalPaise, currency)}
+          </span>
           <ChevronDown className="w-4 h-4 text-[var(--checkout-muted)]" />
         </div>
       </div>
 
-      {/* ── Expanded content ─── */}
-      {!collapsed && (
-        <div className="px-4 pb-4">
-          {/* Line items */}
+      {/* ── Expanded content (Desktop only) ─── */}
+      <div className="px-4 pb-4 hidden md:block">
+        {/* Line items */}
           <div className="space-y-3">
             {lineItems.map((item, idx) => (
               <div
@@ -153,7 +147,6 @@ export default function OrderSummary({
             </span>
           </div>
         </div>
-      )}
     </div>
   );
 }

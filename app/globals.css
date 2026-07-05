@@ -29,6 +29,8 @@
   /* Default Checkout Variables (can be overridden by merchant) */
   --checkout-primary: var(--gf-primary);
   --checkout-primary-hover: var(--gf-primary-hover);
+  --checkout-primary-pale: var(--gf-primary-pale);
+  --checkout-primary-tint: var(--gf-primary-tint);
   --checkout-button-text: #ffffff;
   --checkout-page-bg: var(--gf-page-bg);
   --checkout-card-bg: var(--gf-card-bg);
