@@ -16,9 +16,10 @@
   --gf-muted: #888888;
   --gf-border: #D8D6D6;
 
-  --gf-surface-alt: #F2F2F0;
+  --gf-surface-alt: #FAFAFA;
   --gf-page-bg: #FAFAF9;
   --gf-card-bg: #FEFEFE;
+
 
   --gf-success: #10B981;
   --gf-warning: #F59E0B;
@@ -38,9 +39,25 @@
 
   /* Radii */
   --checkout-radius-sm: 10px;
-  /* inputs/buttons */
   --checkout-radius-md: 16px;
-  /* cards */
+  --checkout-radius-panel: 20px;
+
+  /* Modal panel sizing — ultra compact modal */
+  --checkout-panel-w: min(840px, calc(100vw - 40px));
+  --checkout-panel-max-h: calc(100dvh - 32px);
+
+  /* Overlay */
+  --checkout-overlay-bg: rgba(10, 14, 18, 0.52);
+  --checkout-overlay-blur: 5px;
+
+  /* Column split: 42% left / 58% right */
+  --checkout-col-left: 42%;
+  --checkout-col-right: 58%;
+  --checkout-col-gap: 24px;
+
+  /* Header height: 60px desktop, 56px mobile (set via class) */
+  --checkout-header-h: 60px;
+  --checkout-header-h-mobile: 56px;
 }
 
 @theme inline {
@@ -75,9 +92,9 @@
   --radius-checkout-sm: var(--checkout-radius-sm);
   --radius-checkout-md: var(--checkout-radius-md);
 
-  /* Subtle green-tinted shadows for GoFastrr elements */
-  --shadow-checkout-sm: 0 1px 2px 0 rgba(11, 126, 99, 0.05);
-  --shadow-checkout-md: 0 4px 6px -1px rgba(11, 126, 99, 0.1), 0 2px 4px -1px rgba(11, 126, 99, 0.06);
+  /* Premium soft shadows for GoFastrr elements to create depth */
+  --shadow-checkout-sm: 0 4px 16px 0 rgba(0, 0, 0, 0.08);
+  --shadow-checkout-md: 0 12px 32px -4px rgba(0, 0, 0, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.06);
 
   /* Font mapping (if applicable) */
   --font-sans: var(--font-geist-sans), Arial, Helvetica, sans-serif;
@@ -90,4 +107,20 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Desktop: panel is fixed — prevent body scrollbar */
+@media (min-width: 768px) {
+  body {
+    overflow: hidden;
+  }
+}
+
+/* Compact laptop adjustment: ~768px tall screens (e.g. 1366×768) */
+@media (min-width: 768px) and (max-height: 800px) {
+  :root {
+    --checkout-panel-w: min(1000px, calc(100vw - 32px));
+    --checkout-panel-h: calc(100dvh - 32px);
+    --checkout-panel-max-h: calc(100dvh - 32px);
+  }
 }

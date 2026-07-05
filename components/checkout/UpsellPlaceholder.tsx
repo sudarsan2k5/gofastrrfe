@@ -3,34 +3,48 @@
 import { ThumbsUp, ChevronDown } from "lucide-react";
 
 /**
- * "You may also like" section — visual placeholder only in F1.
- * No upsell API calls, Add buttons are disabled.
+ * "You may also like" upsell section — visual placeholder only.
+ * No upsell or cart API calls. All Add actions are non-functional.
+ * Matches Figma: white card, thumbsup icon, horizontal scroll cards.
  */
 export default function UpsellPlaceholder() {
   return (
-    <div className="bg-[var(--checkout-card-bg)] rounded-[var(--checkout-radius-md)] border border-[var(--checkout-border)] p-5 shadow-[var(--shadow-checkout-sm)]">
+    <div className="bg-[var(--checkout-card-bg)] rounded-[var(--checkout-radius-md)] border border-[var(--checkout-border)] overflow-hidden shadow-[var(--shadow-checkout-sm)]">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold text-[var(--checkout-heading)] flex items-center gap-2">
-          <ThumbsUp className="w-4 h-4 text-[var(--checkout-muted)]" />
+      <div className="flex items-center justify-between px-4 py-3">
+        <h3 className="text-sm font-semibold text-[var(--checkout-heading)] flex items-center gap-2">
+          <ThumbsUp className="w-4 h-4 text-[var(--checkout-muted)]" strokeWidth={2} />
           You may also like
         </h3>
         <ChevronDown className="w-4 h-4 text-[var(--checkout-muted)]" />
       </div>
 
-      {/* Placeholder cards */}
-      <div className="flex gap-3 overflow-x-auto pb-1">
+      {/* Scrollable cards */}
+      <div className="flex gap-3 overflow-x-auto px-4 pb-4 scrollbar-none">
         {[1, 2].map((i) => (
           <div
             key={i}
-            className="min-w-[160px] flex-shrink-0 rounded-[var(--checkout-radius-sm)] border border-[var(--checkout-border)] p-3 opacity-50"
+            className="w-[140px] flex-shrink-0 rounded-[var(--checkout-radius-sm)] border border-[var(--checkout-border)] p-2.5"
           >
-            <div className="w-full h-16 bg-[var(--gf-surface-alt)] rounded-md mb-2" />
-            <div className="h-3 bg-[var(--gf-surface-alt)] rounded w-3/4 mb-1" />
-            <div className="h-3 bg-[var(--gf-surface-alt)] rounded w-1/2 mb-2" />
+            {/* Product image placeholder */}
+            <div className="w-full h-[72px] bg-[var(--gf-surface-alt)] rounded-md mb-2" />
+
+            {/* Title skeleton lines */}
+            <div className="text-xs text-[var(--checkout-heading)] font-medium leading-tight mb-0.5 truncate">
+              Short Sleeve T-shirt
+            </div>
+            <div className="text-xs text-[var(--checkout-muted)] mb-1">(M)</div>
+
+            {/* Prices */}
+            <div className="flex items-baseline gap-1 mb-2">
+              <span className="text-xs font-semibold text-[var(--checkout-heading)]">₹3200</span>
+              <span className="text-[10px] text-[var(--checkout-muted)] line-through">₹3400</span>
+            </div>
+
+            {/* Add button */}
             <button
               disabled
-              className="w-full text-xs py-1.5 rounded-[var(--checkout-radius-sm)] border border-[var(--checkout-border)] text-[var(--checkout-muted)] cursor-not-allowed"
+              className="w-full text-xs py-1 rounded-[var(--checkout-radius-sm)] border border-[var(--checkout-border)] text-[var(--checkout-muted)] cursor-not-allowed"
             >
               Add
             </button>
