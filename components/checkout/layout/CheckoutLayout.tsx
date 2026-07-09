@@ -5,9 +5,10 @@ import CheckoutShell from "@/components/checkout/CheckoutShell";
 import CheckoutHeader from "@/components/checkout/CheckoutHeader";
 import CheckoutFooter from "@/components/checkout/CheckoutFooter";
 import OrderSidebar from "@/components/checkout/layout/OrderSidebar";
+import { type CheckoutDetails } from "@/lib/checkout";
 
 interface CheckoutLayoutProps {
-  checkout: any; // Using any for now to map the full data object
+  checkout: CheckoutDetails;
   children: ReactNode;
 }
 

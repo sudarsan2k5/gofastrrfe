@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import OrderSummary from "@/components/checkout/OrderSummary";
 import CouponCardPlaceholder from "@/components/checkout/CouponCardPlaceholder";
 import UpsellPlaceholder from "@/components/checkout/UpsellPlaceholder";
+import { type CheckoutDetails } from "@/lib/checkout";
 
 /** Figma delivery banner: pill with left/right chevrons */
 function DeliveryBanner() {
@@ -23,7 +24,7 @@ function DeliveryBanner() {
 }
 
 interface OrderSidebarProps {
-  checkout: any;
+  checkout: CheckoutDetails;
 }
 
 export default function OrderSidebar({ checkout }: OrderSidebarProps) {
