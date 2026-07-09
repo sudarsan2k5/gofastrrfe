@@ -69,6 +69,7 @@ export const CHECKOUT_STEPS = {
   PAYMENT_INITIATED: "PAYMENT_INITIATED",
   PARTIALLY_PAID: "PARTIALLY_PAID",
   COMPLETED: "COMPLETED",
+  FAILED: "FAILED",
 } as const;
 
 /* ── Formatting helpers ─── */
