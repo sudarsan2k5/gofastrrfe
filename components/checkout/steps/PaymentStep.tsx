@@ -28,6 +28,15 @@ export default function PaymentStep({ checkout }: PaymentStepProps) {
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Dispatch global event for CheckoutHeader back button
+  useEffect(() => {
+    const event = new CustomEvent("payment-processing-change", { detail: { isProcessing } });
+    window.dispatchEvent(event);
+    return () => {
+      window.dispatchEvent(new CustomEvent("payment-processing-change", { detail: { isProcessing: false } }));
+    };
+  }, [isProcessing]);
+
   // Cleanup polling on unmount
   useEffect(() => {
     return () => {

@@ -88,3 +88,14 @@ export function formatPaise(paise: number, currency = "INR"): string {
     minimumFractionDigits: 0,
   }).format(rupees);
 }
+
+/* ── Checkout Navigation ─── */
+
+export async function stepBack(checkoutSessionId: string): Promise<{ success: boolean; step: string }> {
+  const { apiFetch } = await import("./api");
+  return apiFetch<{ success: boolean; step: string }>("/checkout/step/back", {
+    method: "POST",
+    body: JSON.stringify({ checkoutSessionId }),
+  });
+}
+

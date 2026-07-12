@@ -48,7 +48,7 @@ export default function OrderSidebar({ checkout }: OrderSidebarProps) {
 
       <CouponCardPlaceholder />
 
-      {/* Hide upsells on mobile for now as per Figma */}
+      {/* Show upsells on desktop only for now as per Figma MVP Option A */}
       <div className="hidden md:block">
         <UpsellPlaceholder />
       </div>

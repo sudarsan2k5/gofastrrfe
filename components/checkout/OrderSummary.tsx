@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { ShoppingCart, ChevronDown } from "lucide-react";
 import { type LineItem, formatPaise } from "@/lib/checkout";
@@ -25,11 +26,35 @@ export default function OrderSummary({
   currency,
 }: OrderSummaryProps) {
   const itemCount = lineItems.reduce((sum, li) => sum + li.quantity, 0);
+  
+  // null = use CSS defaults (hidden on mobile, block on desktop)
+  const [userToggled, setUserToggled] = useState<boolean | null>(null);
+
+  const handleToggle = () => {
+    if (userToggled === null) {
+      // If untouched, the current state depends on screen width
+      const isDesktop = window.innerWidth >= 768;
+      setUserToggled(!isDesktop);
+    } else {
+      setUserToggled(!userToggled);
+    }
+  };
+
+  const contentClasses = userToggled === null
+    ? "px-4 pb-4 hidden md:block"
+    : `px-4 pb-4 ${userToggled ? "block" : "hidden"}`;
+
+  const chevronClasses = userToggled === null
+    ? "w-4 h-4 text-[var(--checkout-muted)] transition-transform duration-200 max-md:rotate-0 md:rotate-180"
+    : `w-4 h-4 text-[var(--checkout-muted)] transition-transform duration-200 ${userToggled ? "rotate-180" : ""}`;
 
   return (
     <div className="bg-[var(--checkout-card-bg)] rounded-[var(--checkout-radius-md)] border border-[var(--checkout-border)] overflow-hidden shadow-[var(--shadow-checkout-sm)]">
       {/* ── Header row ─── */}
-      <div className="flex items-center justify-between px-4 py-3">
+      <div 
+        className="flex items-center justify-between px-4 py-3 cursor-pointer select-none hover:bg-[var(--gf-surface-alt)] transition-colors"
+        onClick={handleToggle}
+      >
         <h2 className="flex items-center gap-2 text-sm font-semibold text-[var(--checkout-heading)]">
           <ShoppingCart
             className="w-[18px] h-[18px] text-[var(--checkout-heading)] flex-shrink-0"
@@ -40,16 +65,20 @@ export default function OrderSummary({
 
         <div className="flex items-center gap-1.5 text-sm text-[var(--checkout-muted)]">
           <span>{itemCount} {itemCount === 1 ? "item" : "items"}</span>
-          {/* On mobile-collapsed, show grand total */}
-          <span className="font-semibold text-[var(--checkout-heading)] ml-1 md:hidden">
-            {formatPaise(totals.totalPaise, currency)}
-          </span>
-          <ChevronDown className="w-4 h-4 text-[var(--checkout-muted)]" />
+          
+          {/* On mobile-collapsed, show grand total. Hide on md entirely. */}
+          {userToggled === false || (userToggled === null) ? (
+             <span className={`font-semibold text-[var(--checkout-heading)] ml-1 md:hidden ${userToggled === false ? "block" : ""}`}>
+               {formatPaise(totals.totalPaise, currency)}
+             </span>
+          ) : null}
+
+          <ChevronDown className={chevronClasses} />
         </div>
       </div>
 
-      {/* ── Expanded content (Desktop only) ─── */}
-      <div className="px-4 pb-4 hidden md:block">
+      {/* ── Expanded content ─── */}
+      <div className={contentClasses}>
         {/* Line items */}
           <div className="space-y-3">
             {lineItems.map((item, idx) => (
@@ -81,7 +110,7 @@ export default function OrderSummary({
                   </p>
                   {/* Qty — read-only, no controls */}
                   <p className="text-xs text-[var(--checkout-muted)] mt-1">
-                    {item.quantity}
+                    Qty: {item.quantity}
                   </p>
                 </div>
 

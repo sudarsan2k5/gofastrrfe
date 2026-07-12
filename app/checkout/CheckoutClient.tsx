@@ -16,8 +16,9 @@ const uuidSchema = z.string().uuid();
 
 function Spinner() {
   return (
-    <div className="flex-1 flex items-center justify-center">
-      <div className="w-5 h-5 border-2 border-[var(--checkout-primary)] border-t-transparent rounded-full animate-spin" />
+    <div className="flex-1 flex flex-col items-center justify-center gap-3">
+      <div className="w-6 h-6 border-2 border-[var(--checkout-primary)] border-t-transparent rounded-full animate-spin" />
+      <p className="text-sm text-[var(--checkout-muted)]">Loading checkout...</p>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ThumbsUp, ChevronDown } from "lucide-react";
 
 /**
@@ -8,19 +9,36 @@ import { ThumbsUp, ChevronDown } from "lucide-react";
  * Matches Figma: white card, thumbsup icon, horizontal scroll cards.
  */
 export default function UpsellPlaceholder() {
+  const [userToggled, setUserToggled] = useState<boolean | null>(null);
+
+  const handleToggle = () => {
+    setUserToggled(prev => prev === null ? false : !prev);
+  };
+
+  const isExpanded = userToggled !== false; // defaults to true since it's desktop-only
+
+  const contentClasses = isExpanded
+    ? "flex gap-3 overflow-x-auto px-4 pb-4 scrollbar-none"
+    : "hidden";
+
+  const chevronClasses = `w-4 h-4 text-[var(--checkout-muted)] transition-transform duration-200 ${isExpanded ? "rotate-180" : "rotate-0"}`;
+
   return (
     <div className="bg-[var(--checkout-card-bg)] rounded-[var(--checkout-radius-md)] border border-[var(--checkout-border)] overflow-hidden shadow-[var(--shadow-checkout-sm)]">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3">
+      <div 
+        className="flex items-center justify-between px-4 py-3 cursor-pointer select-none hover:bg-[var(--gf-surface-alt)] transition-colors"
+        onClick={handleToggle}
+      >
         <h3 className="text-sm font-semibold text-[var(--checkout-heading)] flex items-center gap-2">
           <ThumbsUp className="w-4 h-4 text-[var(--checkout-muted)]" strokeWidth={2} />
           You may also like
         </h3>
-        <ChevronDown className="w-4 h-4 text-[var(--checkout-muted)]" />
+        <ChevronDown className={chevronClasses} />
       </div>
 
       {/* Scrollable cards */}
-      <div className="flex gap-3 overflow-x-auto px-4 pb-4 scrollbar-none">
+      <div className={contentClasses}>
         {[1, 2].map((i) => (
           <div
             key={i}
@@ -44,7 +62,7 @@ export default function UpsellPlaceholder() {
             {/* Add button */}
             <button
               disabled
-              className="w-full text-xs py-1 rounded-[var(--checkout-radius-sm)] border border-[var(--checkout-border)] text-[var(--checkout-muted)] cursor-not-allowed"
+              className="w-full text-xs py-1 rounded-[var(--checkout-radius-sm)] border border-[var(--checkout-border)] text-[var(--checkout-muted)] bg-[var(--gf-surface-alt)] opacity-70 cursor-not-allowed"
             >
               Add
             </button>

@@ -31,6 +31,8 @@ export default function CheckoutLayout({ checkout, children }: CheckoutLayoutPro
               storeName={branding.storeName}
               logoUrl={branding.logoUrl}
               showClose
+              step={checkout.step}
+              checkoutSessionId={checkout.checkoutSessionId}
             />
           </div>
 
@@ -52,6 +54,8 @@ export default function CheckoutLayout({ checkout, children }: CheckoutLayoutPro
                   storeName={branding.storeName}
                   logoUrl={branding.logoUrl}
                   showClose
+                  step={checkout.step}
+                  checkoutSessionId={checkout.checkoutSessionId}
                 />
               </div>
               

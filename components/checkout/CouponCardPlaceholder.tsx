@@ -35,7 +35,7 @@ export default function CouponCardPlaceholder() {
       {/* Apply — non-functional */}
       <button
         disabled
-        className="text-sm font-semibold text-[var(--checkout-primary)] cursor-not-allowed flex-shrink-0"
+        className="text-sm font-semibold text-[var(--checkout-muted)] cursor-not-allowed flex-shrink-0"
       >
         Apply
       </button>
