@@ -58,6 +58,14 @@ export default function AddressStep({ checkout }: AddressStepProps) {
     postalCode: checkout.shippingAddress?.postalCode ?? "",
   };
 
+  const initialOptions: FormData[] = [];
+  if (checkout.shippingAddress) {
+    initialOptions.push(initialForm);
+  }
+
+  const [addressOptions, setAddressOptions] = useState<FormData[]>(initialOptions);
+  const [selectedAddressIndex, setSelectedAddressIndex] = useState<number>(initialOptions.length > 0 ? 0 : -1);
+
   const [form, setForm] = useState<FormData>(initialForm);
   const [touchedFields, setTouchedFields] = useState<Set<FieldKey>>(new Set());
   const [submitAttempted, setSubmitAttempted] = useState(false);
@@ -125,6 +133,15 @@ export default function AddressStep({ checkout }: AddressStepProps) {
   const handleUseAddress = () => {
     setSubmitAttempted(true);
     if (hasErrors) return;
+
+    if (selectedAddressIndex >= 0 && selectedAddressIndex < addressOptions.length) {
+      const newOptions = [...addressOptions];
+      newOptions[selectedAddressIndex] = form;
+      setAddressOptions(newOptions);
+    } else {
+      setAddressOptions([...addressOptions, form]);
+      setSelectedAddressIndex(addressOptions.length);
+    }
     setIsReviewMode(true);
   };
 
@@ -138,25 +155,31 @@ export default function AddressStep({ checkout }: AddressStepProps) {
       state: "",
       postalCode: "",
     });
+    setSelectedAddressIndex(-1);
     setSubmitAttempted(false);
     setIsReviewMode(false);
   };
 
-  const handleEdit = () => {
+  const handleEdit = (index: number) => {
+    setForm(addressOptions[index]);
+    setSelectedAddressIndex(index);
     setIsReviewMode(false);
   };
 
   const handleContinue = () => {
+    const selected = addressOptions[selectedAddressIndex];
+    if (!selected) return;
+
     saveAddr({
-      email: form.email.trim(),
+      email: selected.email.trim(),
       phone: checkout.phone ?? "",
       address: {
-        firstName: form.firstName.trim(),
-        lastName: form.lastName.trim(),
-        line1: form.line1.trim(),
-        city: form.city.trim(),
-        state: form.state.trim(),
-        postalCode: form.postalCode.trim(),
+        firstName: selected.firstName.trim(),
+        lastName: selected.lastName.trim(),
+        line1: selected.line1.trim(),
+        city: selected.city.trim(),
+        state: selected.state.trim(),
+        postalCode: selected.postalCode.trim(),
         country: "IN",
       },
     });
@@ -198,25 +221,59 @@ export default function AddressStep({ checkout }: AddressStepProps) {
               </button>
             </div>
 
-            <div className="border border-[var(--checkout-primary)] bg-[var(--checkout-primary-pale)] rounded-[var(--checkout-radius-md)] p-3 relative">
-               <div className="flex justify-between items-start mb-2">
-                 <div className="flex items-center gap-2">
-                   <p className="text-sm font-semibold text-[var(--checkout-heading)]">{form.firstName} {form.lastName}</p>
-                   <span className="px-2 py-0.5 rounded-full bg-[var(--checkout-primary)]/10 text-[var(--checkout-primary)] text-[10px] font-medium">Home</span>
-                 </div>
-                 <button onClick={handleEdit} className="text-[var(--checkout-muted)] hover:text-[var(--checkout-heading)]" aria-label="Edit address">
-                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
-                 </button>
-               </div>
-               <p className="text-xs text-[var(--checkout-body)] mb-1">{form.line1}, {form.city}, {form.state}, {form.postalCode}</p>
-               <p className="text-xs text-[var(--checkout-body)] mb-3 flex items-center gap-1.5">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                  {checkout.phone}
-               </p>
-               <div className="pt-2 mt-2 border-t border-[var(--checkout-primary)]/20 flex justify-between items-center text-xs">
-                 <span className="text-[var(--checkout-muted)]">Standard Shipping</span>
-                 <span className="font-semibold text-[var(--checkout-heading)]">{shippingText}</span>
-               </div>
+            <div className="space-y-3">
+              {addressOptions.map((addr, idx) => {
+                const isSelected = idx === selectedAddressIndex;
+                
+                if (isSelected) {
+                  return (
+                    <div key={idx} className="border border-[var(--checkout-primary)] bg-[var(--checkout-primary-pale)] rounded-[var(--checkout-radius-md)] p-3 relative cursor-default transition-all shadow-sm">
+                       <div className="flex justify-between items-start mb-2">
+                         <div className="flex items-center gap-2">
+                           <p className="text-sm font-semibold text-[var(--checkout-heading)]">{addr.firstName} {addr.lastName}</p>
+                           {/* optional Home pill visual only */}
+                           <span className="px-2 py-0.5 rounded-full bg-[var(--checkout-primary)]/10 text-[var(--checkout-primary)] text-[10px] font-medium">Home</span>
+                         </div>
+                         <button 
+                           onClick={() => handleEdit(idx)} 
+                           className="text-[12px] font-medium text-[var(--checkout-primary)] hover:underline" 
+                           aria-label="Edit address"
+                         >
+                           Edit
+                         </button>
+                       </div>
+                       <p className="text-xs text-[var(--checkout-body)] mb-1">{addr.line1}, {addr.city}, {addr.state}, {addr.postalCode}</p>
+                       <p className="text-xs text-[var(--checkout-body)] mb-3 flex items-center gap-1.5">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                          {checkout.phone}
+                       </p>
+                       <div className="pt-2 mt-2 border-t border-[var(--checkout-primary)]/20 flex justify-between items-center text-xs">
+                         <span className="text-[var(--checkout-muted)]">Standard Shipping</span>
+                         <span className="font-semibold text-[var(--checkout-heading)]">{shippingText}</span>
+                       </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div 
+                    key={idx} 
+                    onClick={() => {
+                      setSelectedAddressIndex(idx);
+                      setForm(addressOptions[idx]);
+                    }}
+                    className="border border-[var(--checkout-border)] rounded-[var(--checkout-radius-md)] p-3 cursor-pointer hover:bg-[var(--gf-surface-alt)] transition-colors group"
+                  >
+                    <div className="flex justify-between items-start">
+                       <div className="flex items-center gap-2">
+                         <p className="text-sm font-semibold text-[var(--checkout-heading)] group-hover:text-[var(--checkout-primary)] transition-colors">{addr.firstName} {addr.lastName}</p>
+                       </div>
+                       <div className="w-4 h-4 rounded-full border border-[var(--checkout-muted)] flex items-center justify-center bg-transparent group-hover:border-[var(--checkout-primary)] transition-colors" />
+                    </div>
+                    <p className="text-xs text-[var(--checkout-body)] mt-1 truncate">{addr.line1}, {addr.city}, {addr.state}, {addr.postalCode}</p>
+                  </div>
+                );
+              })}
             </div>
 
             {apiErrorMessage && (
@@ -233,7 +290,7 @@ export default function AddressStep({ checkout }: AddressStepProps) {
         <div className="mt-auto md:mt-16 lg:mt-24 sticky md:static bottom-0 -mx-4 md:mx-0 px-4 md:px-0 pt-4 pb-[calc(16px+env(safe-area-inset-bottom))] md:pb-0 md:pt-0 bg-[var(--checkout-card-bg)] md:bg-transparent z-10 flex justify-end">
           <button
             onClick={handleContinue}
-            disabled={isSaving}
+            disabled={isSaving || selectedAddressIndex === -1}
             className="w-full md:w-[160px] h-[58px] md:h-auto md:py-3.5 rounded-[8px] bg-[var(--checkout-primary)] text-[var(--checkout-button-text)] text-base md:text-sm font-semibold disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
           >
             {isSaving ? "Saving..." : "Continue"}
