@@ -18,13 +18,13 @@ export default function UpsellPlaceholder() {
   const isExpanded = userToggled !== false; // defaults to true since it's desktop-only
 
   const contentClasses = isExpanded
-    ? "flex gap-3 overflow-x-auto px-4 pb-4 scrollbar-none"
+    ? "flex gap-3 px-4 pb-4 overflow-hidden min-w-0"
     : "hidden";
 
   const chevronClasses = `w-4 h-4 text-[var(--checkout-muted)] transition-transform duration-200 ${isExpanded ? "rotate-180" : "rotate-0"}`;
 
   return (
-    <div className="bg-[var(--checkout-card-bg)] rounded-[var(--checkout-radius-md)] border border-[var(--checkout-border)] overflow-hidden shadow-[var(--shadow-checkout-sm)]">
+    <div className="bg-[var(--checkout-card-bg)] rounded-[var(--checkout-radius-md)] border border-[var(--checkout-border)] overflow-hidden shadow-[var(--shadow-checkout-sm)] min-w-0 w-full max-w-full">
       {/* Header */}
       <div 
         className="flex items-center justify-between px-4 py-3 cursor-pointer select-none hover:bg-[var(--gf-surface-alt)] transition-colors"
@@ -42,7 +42,7 @@ export default function UpsellPlaceholder() {
         {[1, 2].map((i) => (
           <div
             key={i}
-            className="w-[140px] flex-shrink-0 rounded-[var(--checkout-radius-sm)] border border-[var(--checkout-border)] p-2.5"
+            className="min-w-[120px] max-w-[140px] flex-1 rounded-[var(--checkout-radius-sm)] border border-[var(--checkout-border)] p-2.5 min-w-0 overflow-hidden"
           >
             {/* Product image placeholder */}
             <div className="w-full h-[72px] bg-[var(--gf-surface-alt)] rounded-md mb-2" />

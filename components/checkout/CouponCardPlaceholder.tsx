@@ -6,7 +6,12 @@
  * muted secondary link, right-aligned green Apply button.
  * No coupon API calls. Apply is non-functional.
  */
-export default function CouponCardPlaceholder() {
+
+interface CouponCardPlaceholderProps {
+  onOpenCoupons?: () => void;
+}
+
+export default function CouponCardPlaceholder({ onOpenCoupons }: CouponCardPlaceholderProps) {
   return (
     <div className="bg-[var(--checkout-primary-pale)] border border-[var(--checkout-primary-tint)] rounded-[var(--checkout-radius-md)] px-4 py-2.5 flex items-center gap-3">
       {/* Icon box */}
@@ -26,10 +31,19 @@ export default function CouponCardPlaceholder() {
         <p className="text-sm font-semibold text-[var(--checkout-primary)] leading-tight">
           Save on this order
         </p>
-        <p className="text-xs text-[var(--checkout-muted)] mt-0.5">
-          View all coupons{" "}
-          <span className="text-[var(--checkout-muted)]">›</span>
-        </p>
+        {onOpenCoupons ? (
+          <button
+            onClick={onOpenCoupons}
+            className="text-xs text-[var(--checkout-muted)] mt-0.5 hover:text-[var(--checkout-primary)] transition-colors cursor-pointer"
+          >
+            View all coupons <span>›</span>
+          </button>
+        ) : (
+          <p className="text-xs text-[var(--checkout-muted)] mt-0.5">
+            View all coupons{" "}
+            <span className="text-[var(--checkout-muted)]">›</span>
+          </p>
+        )}
       </div>
 
       {/* Apply — non-functional */}

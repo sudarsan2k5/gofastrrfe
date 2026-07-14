@@ -47,7 +47,7 @@ export default function SummaryStep({ checkout }: SummaryStepProps) {
   };
 
   return (
-    <div className="flex flex-col flex-1 h-full relative">
+    <div className="flex flex-col flex-1 h-full relative min-w-0">
       <div className="space-y-3 md:space-y-4 pb-6 md:pb-0">
         <div className="bg-[var(--checkout-card-bg)] rounded-[var(--checkout-radius-md)] border border-[var(--checkout-border)] p-4 shadow-[var(--shadow-checkout-sm)]">
           {/* Title */}

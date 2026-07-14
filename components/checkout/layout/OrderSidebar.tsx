@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import OrderSummary from "@/components/checkout/OrderSummary";
 import CouponCardPlaceholder from "@/components/checkout/CouponCardPlaceholder";
 import UpsellPlaceholder from "@/components/checkout/UpsellPlaceholder";
+import CouponsPanel from "@/components/checkout/layout/CouponsPanel";
 import { type CheckoutDetails } from "@/lib/checkout";
 
 /** Figma delivery banner: pill with left/right chevrons */
@@ -30,8 +32,24 @@ interface OrderSidebarProps {
 export default function OrderSidebar({ checkout }: OrderSidebarProps) {
   const { lineItems, totals, currency } = checkout;
 
+  const showPlaceholders =
+    process.env.NEXT_PUBLIC_CHECKOUT_SHOW_PLACEHOLDERS === "true";
+
+  const [sidebarView, setSidebarView] = useState<"summary" | "coupons">("summary");
+
+  // Force summary view if placeholders are hidden
+  const effectiveView = showPlaceholders ? sidebarView : "summary";
+
+  if (effectiveView === "coupons") {
+    return (
+      <div className="min-w-0 w-full max-w-full">
+        <CouponsPanel onBack={() => setSidebarView("summary")} />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-3 md:space-y-4">
+    <div className="space-y-3 md:space-y-4 min-w-0 w-full max-w-full">
       <DeliveryBanner />
 
       {/* 
@@ -46,12 +64,16 @@ export default function OrderSidebar({ checkout }: OrderSidebarProps) {
         currency={currency}
       />
 
-      <CouponCardPlaceholder />
+      {showPlaceholders && (
+        <CouponCardPlaceholder onOpenCoupons={() => setSidebarView("coupons")} />
+      )}
 
       {/* Show upsells on desktop only for now as per Figma MVP Option A */}
-      <div className="hidden md:block">
-        <UpsellPlaceholder />
-      </div>
+      {showPlaceholders && (
+        <div className="hidden md:block">
+          <UpsellPlaceholder />
+        </div>
+      )}
     </div>
   );
 }

@@ -1,3 +1,19 @@
+export interface RazorpayDisplayConfig {
+  display?: {
+    blocks?: Record<
+      string,
+      {
+        name: string;
+        instruments: Array<{ method: string; [key: string]: unknown }>;
+      }
+    >;
+    sequence?: string[];
+    preferences?: {
+      show_default_blocks?: boolean;
+    };
+  };
+}
+
 export interface RazorpayOptions {
   key: string;
   amount: number;
@@ -18,6 +34,7 @@ export interface RazorpayOptions {
   theme?: {
     color?: string;
   };
+  config?: RazorpayDisplayConfig;
 }
 
 export interface RazorpayResponse {

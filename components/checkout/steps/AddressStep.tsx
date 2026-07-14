@@ -2,17 +2,18 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
-import { AlertCircle, Plus } from "lucide-react";
+import { AlertCircle, Plus, Pencil } from "lucide-react";
 import TrustBadges from "@/components/checkout/TrustBadges";
 import { useSaveAddress, useCalculateShipping } from "@/hooks/useAddress";
 import { getAddressErrorMessage, INDIAN_STATES } from "@/lib/address";
-import { type CheckoutDetails, CHECKOUT_STEPS, formatPaise } from "@/lib/checkout";
+import { type CheckoutDetails, formatPaise } from "@/lib/checkout";
 
 interface AddressStepProps {
   checkout: CheckoutDetails;
 }
 
-interface FormData {
+interface AddressEntry {
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -22,19 +23,18 @@ interface FormData {
   postalCode: string;
 }
 
-type FieldKey = keyof FormData;
+type FieldKey = keyof Omit<AddressEntry, "id">;
 
-
-function validate(form: FormData, hasPhone: boolean) {
+function validate(addr: AddressEntry, hasPhone: boolean) {
   const errors: Partial<Record<FieldKey | "phone", string>> = {};
-  if (!form.firstName.trim()) errors.firstName = "Enter first name";
-  if (!form.lastName.trim()) errors.lastName = "Enter last name";
-  if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
+  if (!addr.firstName.trim()) errors.firstName = "Enter first name";
+  if (!addr.lastName.trim()) errors.lastName = "Enter last name";
+  if (!addr.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr.email.trim()))
     errors.email = "Enter a valid email";
-  if (!form.line1.trim()) errors.line1 = "Enter complete address";
-  if (!form.city.trim()) errors.city = "Enter city";
-  if (!form.state.trim()) errors.state = "Enter state";
-  if (!/^\d{6}$/.test(form.postalCode.trim())) errors.postalCode = "Enter a valid 6-digit pincode";
+  if (!addr.line1.trim()) errors.line1 = "Enter complete address";
+  if (!addr.city.trim()) errors.city = "Enter city";
+  if (!addr.state.trim()) errors.state = "Enter state";
+  if (!/^\d{6}$/.test(addr.postalCode.trim())) errors.postalCode = "Enter a valid 6-digit pincode";
   if (!hasPhone) errors.phone = "Please verify your phone number again";
   return errors;
 }
@@ -44,35 +44,103 @@ function maskPhone(phone: string): string {
   return `${phone.slice(0, 2)}${"*".repeat(phone.length - 4)}${phone.slice(-2)}`;
 }
 
+let nextLocalId = 1;
+function makeLocalId(): string {
+  return `local-${nextLocalId++}`;
+}
+
+function buildInitialAddresses(checkout: CheckoutDetails): AddressEntry[] {
+  if (!checkout.shippingAddress) return [];
+  return [
+    {
+      id: makeLocalId(),
+      firstName: checkout.shippingAddress.firstName,
+      lastName: checkout.shippingAddress.lastName,
+      email: checkout.email ?? "",
+      line1: checkout.shippingAddress.line1,
+      city: checkout.shippingAddress.city,
+      state: checkout.shippingAddress.state,
+      postalCode: checkout.shippingAddress.postalCode,
+    },
+  ];
+}
+
 export default function AddressStep({ checkout }: AddressStepProps) {
   const sessionId = checkout.checkoutSessionId;
 
-  // Prefill from existing data
-  const initialForm: FormData = {
-    firstName: checkout.shippingAddress?.firstName ?? "",
-    lastName: checkout.shippingAddress?.lastName ?? "",
-    email: checkout.email ?? "",
-    line1: checkout.shippingAddress?.line1 ?? "",
-    city: checkout.shippingAddress?.city ?? "",
-    state: checkout.shippingAddress?.state ?? "",
-    postalCode: checkout.shippingAddress?.postalCode ?? "",
-  };
+  // ── Local address list ──
+  const [addressOptions, setAddressOptions] = useState<AddressEntry[]>(() =>
+    buildInitialAddresses(checkout)
+  );
+  const [selectedId, setSelectedId] = useState<string | null>(
+    () => addressOptions[0]?.id ?? null
+  );
 
-  const initialOptions: FormData[] = [];
-  if (checkout.shippingAddress) {
-    initialOptions.push(initialForm);
+  // ── Mode: "review" or "form" ──
+  // Show review if checkout already has a saved address, regardless of step.
+  // Back-from-Payment gives step=OTP_VERIFIED but shippingAddress is still populated.
+  const hasPreexistingAddress = !!checkout.shippingAddress;
+  const [mode, setMode] = useState<"form" | "review">(
+    hasPreexistingAddress && addressOptions.length > 0 ? "review" : "form"
+  );
+  // When editing, track which address id we are editing (null = adding new)
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  // ── Dirty state for preventing overwrite ──
+  // True if user is actively adding/editing/selecting a local draft that hasn't been saved.
+  const [isDirty, setIsDirty] = useState(false);
+
+  // ── Rehydrate from backend safely (inline state adjustment) ──
+  // We track the stringified backend address to know when it updates.
+  const [prevShippingStr, setPrevShippingStr] = useState(() => JSON.stringify(checkout.shippingAddress));
+  
+  const currentShippingStr = JSON.stringify(checkout.shippingAddress);
+  if (currentShippingStr !== prevShippingStr) {
+    setPrevShippingStr(currentShippingStr);
+    
+    if (!isDirty && checkout.shippingAddress) {
+      const fresh = buildInitialAddresses(checkout);
+      if (fresh.length > 0) {
+        setAddressOptions(fresh);
+        setSelectedId(fresh[0].id);
+        if (mode === "form") {
+          setMode("review");
+        }
+      }
+    }
   }
 
-  const [addressOptions, setAddressOptions] = useState<FormData[]>(initialOptions);
-  const [selectedAddressIndex, setSelectedAddressIndex] = useState<number>(initialOptions.length > 0 ? 0 : -1);
+  // ── Form state ──
+  const emptyForm: AddressEntry = {
+    id: "",
+    firstName: "",
+    lastName: "",
+    email: checkout.email ?? "",
+    line1: "",
+    city: "",
+    state: "",
+    postalCode: "",
+  };
 
-  const [form, setForm] = useState<FormData>(initialForm);
+  const [form, setForm] = useState<AddressEntry>(() => {
+    if (hasPreexistingAddress && addressOptions.length > 0) {
+      return { ...addressOptions[0] };
+    }
+    return {
+      ...emptyForm,
+      firstName: checkout.shippingAddress?.firstName ?? "",
+      lastName: checkout.shippingAddress?.lastName ?? "",
+      email: checkout.email ?? "",
+      line1: checkout.shippingAddress?.line1 ?? "",
+      city: checkout.shippingAddress?.city ?? "",
+      state: checkout.shippingAddress?.state ?? "",
+      postalCode: checkout.shippingAddress?.postalCode ?? "",
+    };
+  });
+
   const [touchedFields, setTouchedFields] = useState<Set<FieldKey>>(new Set());
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [shippingStatus, setShippingStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [isReviewMode, setIsReviewMode] = useState(
-    checkout.step === CHECKOUT_STEPS.ADDRESS_SAVED && !!checkout.shippingAddress
-  );
 
   const { mutate: saveAddr, isPending: isSaving, error: saveError } = useSaveAddress(sessionId);
   const { mutate: calcShipping } = useCalculateShipping(sessionId);
@@ -130,47 +198,62 @@ export default function AddressStep({ checkout }: AddressStepProps) {
     return submitAttempted || touchedFields.has(key);
   };
 
+  // ── Form Mode: "Use this address" ──
   const handleUseAddress = () => {
     setSubmitAttempted(true);
     if (hasErrors) return;
 
-    if (selectedAddressIndex >= 0 && selectedAddressIndex < addressOptions.length) {
-      const newOptions = [...addressOptions];
-      newOptions[selectedAddressIndex] = form;
-      setAddressOptions(newOptions);
+    if (editingId) {
+      // Update existing entry
+      setAddressOptions((prev) =>
+        prev.map((a) => (a.id === editingId ? { ...form, id: editingId } : a))
+      );
+      setSelectedId(editingId);
     } else {
-      setAddressOptions([...addressOptions, form]);
-      setSelectedAddressIndex(addressOptions.length);
+      // Add new entry
+      const newId = makeLocalId();
+      const newEntry: AddressEntry = { ...form, id: newId };
+      setAddressOptions((prev) => [...prev, newEntry]);
+      setSelectedId(newId);
     }
-    setIsReviewMode(true);
+
+    setEditingId(null);
+    setIsDirty(true);
+    setMode("review");
   };
 
+  // ── Review Mode: "Add New Address" ──
   const handleAddNew = () => {
-    setForm({
-      firstName: "",
-      lastName: "",
-      email: checkout.email ?? "",
-      line1: "",
-      city: "",
-      state: "",
-      postalCode: "",
-    });
-    setSelectedAddressIndex(-1);
+    setForm({ ...emptyForm, id: "" });
+    setEditingId(null);
     setSubmitAttempted(false);
-    setIsReviewMode(false);
+    setTouchedFields(new Set());
+    setIsDirty(true);
+    setMode("form");
   };
 
-  const handleEdit = (index: number) => {
-    setForm(addressOptions[index]);
-    setSelectedAddressIndex(index);
-    setIsReviewMode(false);
+  // ── Review Mode: "Edit" selected address ──
+  const handleEditAddress = (addr: AddressEntry) => {
+    setForm({ ...addr });
+    setEditingId(addr.id);
+    setSubmitAttempted(false);
+    setTouchedFields(new Set());
+    setIsDirty(true);
+    setMode("form");
   };
 
+  // ── Review Mode: select a different address card ──
+  const handleSelectAddress = (id: string) => {
+    setSelectedId(id);
+    setIsDirty(true);
+  };
+
+  // ── Review Mode: "Continue" → call backend ──
   const handleContinue = () => {
-    const selected = addressOptions[selectedAddressIndex];
+    const selected = addressOptions.find((a) => a.id === selectedId);
     if (!selected) return;
 
-    saveAddr({
+    const payload = {
       email: selected.email.trim(),
       phone: checkout.phone ?? "",
       address: {
@@ -182,6 +265,17 @@ export default function AddressStep({ checkout }: AddressStepProps) {
         postalCode: selected.postalCode.trim(),
         country: "IN",
       },
+    };
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[address-save] saving selected address postalCode=${payload.address.postalCode} city=${payload.address.city}`);
+    }
+
+    saveAddr(payload, {
+      onSuccess: () => {
+        // Backend confirms the new address is saved. Safe to rehydrate now.
+        setIsDirty(false);
+      }
     });
   };
 
@@ -193,18 +287,20 @@ export default function AddressStep({ checkout }: AddressStepProps) {
   const inputNormal = `${inputBase} border-[var(--checkout-border)] focus:border-[var(--checkout-primary)] focus:ring-1 focus:ring-[var(--checkout-primary)]`;
   const inputError = `${inputBase} border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500`;
 
-  if (isReviewMode) {
+  /* ─────────── REVIEW MODE ─────────── */
+  if (mode === "review" && addressOptions.length > 0) {
     const isFreeShipping = checkout.totals.shippingPaise === 0;
-    const shippingText = isFreeShipping 
-      ? "Free" 
-      : checkout.totals.shippingPaise > 0 
+    const shippingText = isFreeShipping
+      ? "Free"
+      : checkout.totals.shippingPaise > 0
         ? formatPaise(checkout.totals.shippingPaise, checkout.currency)
         : "Calculated at next step";
 
     return (
-      <div className="flex flex-col flex-1 h-full relative">
+      <div className="flex flex-col flex-1 h-full relative min-w-0">
         <div className="space-y-3 md:space-y-4 pb-6 md:pb-0">
-          <div className="bg-[var(--checkout-card-bg)] rounded-[var(--checkout-radius-md)] border border-[var(--checkout-border)] p-4 shadow-[var(--shadow-checkout-sm)]">
+          <div className="bg-[var(--checkout-card-bg)] rounded-[var(--checkout-radius-md)] border border-[var(--checkout-border)] p-4 shadow-[var(--shadow-checkout-sm)] min-w-0 overflow-hidden">
+            {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-[var(--checkout-heading)]">
                 <span className="w-7 h-7 rounded-full bg-[var(--gf-surface-alt)] flex items-center justify-center flex-shrink-0">
@@ -212,70 +308,95 @@ export default function AddressStep({ checkout }: AddressStepProps) {
                 </span>
                 Delivery Address
               </h2>
-              <button 
-                onClick={handleAddNew} 
-                className="flex items-center gap-1 bg-[var(--gf-surface-alt)] px-2.5 py-1.5 rounded-full text-[10px] font-medium text-[var(--checkout-heading)] hover:bg-gray-200 transition-colors"
+              <button
+                onClick={handleAddNew}
+                className="flex items-center gap-1.5 bg-[var(--gf-surface-alt)] px-3 py-1.5 rounded-full text-[11px] font-medium text-[var(--checkout-heading)] hover:bg-gray-200 active:scale-[0.97] transition-all"
               >
-                <Plus className="w-3 h-3" />
+                <Plus className="w-3.5 h-3.5" />
                 Add New Address
               </button>
             </div>
 
-            <div className="space-y-3">
-              {addressOptions.map((addr, idx) => {
-                const isSelected = idx === selectedAddressIndex;
-                
-                if (isSelected) {
-                  return (
-                    <div key={idx} className="border border-[var(--checkout-primary)] bg-[var(--checkout-primary-pale)] rounded-[var(--checkout-radius-md)] p-3 relative cursor-default transition-all shadow-sm">
-                       <div className="flex justify-between items-start mb-2">
-                         <div className="flex items-center gap-2">
-                           <p className="text-sm font-semibold text-[var(--checkout-heading)]">{addr.firstName} {addr.lastName}</p>
-                           {/* optional Home pill visual only */}
-                           <span className="px-2 py-0.5 rounded-full bg-[var(--checkout-primary)]/10 text-[var(--checkout-primary)] text-[10px] font-medium">Home</span>
-                         </div>
-                         <button 
-                           onClick={() => handleEdit(idx)} 
-                           className="text-[12px] font-medium text-[var(--checkout-primary)] hover:underline" 
-                           aria-label="Edit address"
-                         >
-                           Edit
-                         </button>
-                       </div>
-                       <p className="text-xs text-[var(--checkout-body)] mb-1">{addr.line1}, {addr.city}, {addr.state}, {addr.postalCode}</p>
-                       <p className="text-xs text-[var(--checkout-body)] mb-3 flex items-center gap-1.5">
+            {/* Address cards */}
+            <div className="space-y-2.5 min-w-0">
+              {addressOptions.map((addr) => {
+                const isSelected = addr.id === selectedId;
+                return (
+                  <div
+                    key={addr.id}
+                    onClick={() => !isSelected && handleSelectAddress(addr.id)}
+                    className={`rounded-[var(--checkout-radius-md)] p-3 transition-all ${
+                      isSelected
+                        ? "border-2 border-[var(--checkout-primary)] bg-[color-mix(in_srgb,var(--checkout-primary)_6%,var(--checkout-card-bg))]"
+                        : "border border-[var(--checkout-border)] cursor-pointer hover:border-[var(--checkout-primary)]/50"
+                    }`}
+                  >
+                    {isSelected ? (
+                      /* ── Expanded selected card ── */
+                      <>
+                        <div className="flex justify-between items-start mb-1.5 gap-2">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-[var(--checkout-heading)]">
+                              {addr.firstName} {addr.lastName}
+                            </p>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[color-mix(in_srgb,var(--checkout-primary)_12%,transparent)] text-[var(--checkout-primary)]">
+                              Home
+                            </span>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditAddress(addr);
+                            }}
+                            className="flex items-center gap-1 text-[11px] font-medium text-[var(--checkout-primary)] hover:underline"
+                          >
+                            <Pencil className="w-3 h-3" />
+                            Edit
+                          </button>
+                        </div>
+
+                        <p className="text-xs text-[var(--checkout-body)] mb-1 leading-relaxed break-words">
+                          {addr.line1}, {addr.city}, {addr.state}, {addr.postalCode}
+                        </p>
+                        <p className="text-xs text-[var(--checkout-body)] mb-3 flex items-center gap-1.5">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                           {checkout.phone}
-                       </p>
-                       <div className="pt-2 mt-2 border-t border-[var(--checkout-primary)]/20 flex justify-between items-center text-xs">
-                         <span className="text-[var(--checkout-muted)]">Standard Shipping</span>
-                         <span className="font-semibold text-[var(--checkout-heading)]">{shippingText}</span>
-                       </div>
-                    </div>
-                  );
-                }
+                        </p>
 
-                return (
-                  <div 
-                    key={idx} 
-                    onClick={() => {
-                      setSelectedAddressIndex(idx);
-                      setForm(addressOptions[idx]);
-                    }}
-                    className="border border-[var(--checkout-border)] rounded-[var(--checkout-radius-md)] p-3 cursor-pointer hover:bg-[var(--gf-surface-alt)] transition-colors group"
-                  >
-                    <div className="flex justify-between items-start">
-                       <div className="flex items-center gap-2">
-                         <p className="text-sm font-semibold text-[var(--checkout-heading)] group-hover:text-[var(--checkout-primary)] transition-colors">{addr.firstName} {addr.lastName}</p>
-                       </div>
-                       <div className="w-4 h-4 rounded-full border border-[var(--checkout-muted)] flex items-center justify-center bg-transparent group-hover:border-[var(--checkout-primary)] transition-colors" />
-                    </div>
-                    <p className="text-xs text-[var(--checkout-body)] mt-1 truncate">{addr.line1}, {addr.city}, {addr.state}, {addr.postalCode}</p>
+                        <div className="pt-2 mt-1 border-t border-[color-mix(in_srgb,var(--checkout-primary)_20%,transparent)] flex justify-between items-center text-xs">
+                          <span className="text-[var(--checkout-muted)]">Standard Shipping</span>
+                          <span className="font-semibold text-[var(--checkout-heading)]">{shippingText}</span>
+                        </div>
+                      </>
+                    ) : (
+                      /* ── Compact unselected card ── */
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-4 h-4 rounded-full border-2 border-[var(--checkout-border)] flex-shrink-0" />
+                          <p className="text-sm font-medium text-[var(--checkout-heading)] truncate">
+                            {addr.firstName} {addr.lastName}
+                          </p>
+                          <span className="text-xs text-[var(--checkout-muted)] truncate hidden sm:inline">
+                            — {addr.line1}, {addr.city}
+                          </span>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditAddress(addr);
+                          }}
+                          className="text-[11px] font-medium text-[var(--checkout-primary)] hover:underline flex-shrink-0 ml-2"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
 
+            {/* API error */}
             {apiErrorMessage && (
               <div className="mt-4 text-xs text-red-500 flex items-center gap-1.5 p-2 bg-red-50 rounded">
                 <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -286,11 +407,11 @@ export default function AddressStep({ checkout }: AddressStepProps) {
           <TrustBadges />
         </div>
 
-        {/* Sticky CTA for Review Mode */}
+        {/* Sticky CTA — Review Mode */}
         <div className="mt-auto md:mt-16 lg:mt-24 sticky md:static bottom-0 -mx-4 md:mx-0 px-4 md:px-0 pt-4 pb-[calc(16px+env(safe-area-inset-bottom))] md:pb-0 md:pt-0 bg-[var(--checkout-card-bg)] md:bg-transparent z-10 flex justify-end">
           <button
             onClick={handleContinue}
-            disabled={isSaving || selectedAddressIndex === -1}
+            disabled={isSaving || !selectedId}
             className="w-full md:w-[160px] h-[58px] md:h-auto md:py-3.5 rounded-[8px] bg-[var(--checkout-primary)] text-[var(--checkout-button-text)] text-base md:text-sm font-semibold disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
           >
             {isSaving ? "Saving..." : "Continue"}
@@ -300,8 +421,9 @@ export default function AddressStep({ checkout }: AddressStepProps) {
     );
   }
 
+  /* ─────────── FORM MODE ─────────── */
   return (
-    <div className="flex flex-col flex-1 h-full relative">
+    <div className="flex flex-col flex-1 h-full relative min-w-0">
       <div className="space-y-3 md:space-y-4 pb-6 md:pb-0">
         <div className="bg-[var(--checkout-card-bg)] rounded-[var(--checkout-radius-md)] border border-[var(--checkout-border)] p-4 shadow-[var(--shadow-checkout-sm)]">
           {/* Title */}
@@ -507,7 +629,7 @@ export default function AddressStep({ checkout }: AddressStepProps) {
         <TrustBadges />
       </div>
 
-      {/* Sticky CTA for Form Mode */}
+      {/* Sticky CTA — Form Mode */}
       <div className="mt-auto md:mt-16 lg:mt-24 sticky md:static bottom-0 -mx-4 md:mx-0 px-4 md:px-0 pt-4 pb-[calc(16px+env(safe-area-inset-bottom))] md:pb-0 md:pt-0 bg-[var(--checkout-card-bg)] md:bg-transparent z-10 flex justify-end">
         <button
           onClick={handleUseAddress}

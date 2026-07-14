@@ -111,7 +111,7 @@ export default function OtpStep({ checkout }: OtpStepProps) {
   const isWorking = isVerifying || isResending || isEditing;
 
   return (
-    <div className="flex flex-col flex-1 h-full relative">
+    <div className="flex flex-col flex-1 h-full relative min-w-0">
       <div className="space-y-3 md:space-y-4 pb-6 md:pb-0">
         <div className="bg-[var(--checkout-card-bg)] rounded-[var(--checkout-radius-md)] border border-[var(--checkout-border)] p-6 shadow-[var(--shadow-checkout-sm)] flex flex-col items-center text-center">
           
