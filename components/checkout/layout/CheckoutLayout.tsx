@@ -41,9 +41,9 @@ export default function CheckoutLayout({ checkout, children }: CheckoutLayoutPro
             On Desktop: CSS grid with enforced fr-based column split.
             minmax(0, Xfr) prevents either column from exceeding its share.
           */}
-          <div className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden md:grid md:grid-cols-[minmax(0,42fr)_minmax(0,58fr)] w-full max-w-full">
+          <div className="flex-1 min-h-0 overflow-y-auto scrollbar-none md:overflow-hidden md:grid md:grid-cols-[minmax(0,42fr)_minmax(0,58fr)] w-full max-w-full">
             {/* Left Column: Order Sidebar */}
-            <div className="min-w-0 w-full max-w-full overflow-x-hidden md:overflow-y-auto px-4 md:px-6 pt-4 pb-0 md:py-6 flex flex-col gap-3 md:gap-4">
+            <div className="min-w-0 w-full max-w-full overflow-x-hidden md:overflow-y-auto scrollbar-none px-4 md:px-6 pt-4 pb-0 md:py-6 flex flex-col gap-3 md:gap-4">
               <OrderSidebar checkout={checkout} />
             </div>
 

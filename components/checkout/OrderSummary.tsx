@@ -79,58 +79,60 @@ export default function OrderSummary({
 
       {/* ── Expanded content ─── */}
       <div className={contentClasses}>
-        {/* Line items */}
-          <div className="space-y-3">
-            {lineItems.map((item, idx) => (
-              <div
-                key={`${item.variant_id ?? "custom"}-${idx}`}
-                className="flex gap-3 items-start"
-              >
-                {/* Product image */}
-                <div className="w-[60px] h-[60px] rounded-[var(--checkout-radius-sm)] overflow-hidden bg-[var(--gf-surface-alt)] flex-shrink-0 border border-[var(--checkout-border)]">
-                  <Image
-                    src={item.image ?? FALLBACK_IMAGE}
-                    alt={item.product_title ?? "Product"}
-                    width={60}
-                    height={60}
-                    className="w-full h-full object-cover"
-                    unoptimized={!!item.image}
-                  />
-                </div>
+        {/* Line items — scrollable when many products */}
+          <div className="max-h-[165px] md:max-h-[195px] lg:max-h-[210px] overflow-y-auto overscroll-contain pr-1 scrollbar-none relative">
+            <div className="space-y-3">
+              {lineItems.map((item, idx) => (
+                <div
+                  key={`${item.variant_id ?? "custom"}-${idx}`}
+                  className="flex gap-3 items-start min-w-0"
+                >
+                  {/* Product image */}
+                  <div className="w-[60px] h-[60px] rounded-[var(--checkout-radius-sm)] overflow-hidden bg-[var(--gf-surface-alt)] flex-shrink-0 border border-[var(--checkout-border)]">
+                    <Image
+                      src={item.image ?? FALLBACK_IMAGE}
+                      alt={item.product_title ?? "Product"}
+                      width={60}
+                      height={60}
+                      className="w-full h-full object-cover"
+                      unoptimized={!!item.image}
+                    />
+                  </div>
 
-                {/* Details */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-[var(--checkout-heading)] leading-snug">
-                    {item.product_title ?? "Product"}
-                    {item.variant_title && (
-                      <span className="font-normal text-[var(--checkout-muted)]">
-                        {" "}({item.variant_title})
-                      </span>
-                    )}
-                  </p>
-                  {/* Qty — read-only, no controls */}
-                  <p className="text-xs text-[var(--checkout-muted)] mt-1">
-                    Qty: {item.quantity}
-                  </p>
-                </div>
+                  {/* Details */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-[var(--checkout-heading)] leading-snug line-clamp-2">
+                      {item.product_title ?? "Product"}
+                      {item.variant_title && (
+                        <span className="font-normal text-[var(--checkout-muted)]">
+                          {" "}({item.variant_title})
+                        </span>
+                      )}
+                    </p>
+                    {/* Qty — read-only, no controls */}
+                    <p className="text-xs text-[var(--checkout-muted)] mt-1">
+                      Qty: {item.quantity}
+                    </p>
+                  </div>
 
-                {/* Price column */}
-                <div className="text-right flex-shrink-0">
-                  <p className="text-sm font-semibold text-[var(--checkout-heading)]">
-                    {formatPaise(item.unit_price_paise * item.quantity, currency)}
-                  </p>
-                  {item.compare_at_price_paise != null &&
-                    item.compare_at_price_paise > item.unit_price_paise && (
-                      <p className="text-xs text-[var(--checkout-muted)] line-through">
-                        {formatPaise(
-                          item.compare_at_price_paise * item.quantity,
-                          currency
-                        )}
-                      </p>
-                    )}
+                  {/* Price column */}
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-semibold text-[var(--checkout-heading)]">
+                      {formatPaise(item.unit_price_paise * item.quantity, currency)}
+                    </p>
+                    {item.compare_at_price_paise != null &&
+                      item.compare_at_price_paise > item.unit_price_paise && (
+                        <p className="text-xs text-[var(--checkout-muted)] line-through">
+                          {formatPaise(
+                            item.compare_at_price_paise * item.quantity,
+                            currency
+                          )}
+                        </p>
+                      )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Totals */}

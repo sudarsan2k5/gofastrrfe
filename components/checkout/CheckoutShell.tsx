@@ -52,10 +52,9 @@ export default function CheckoutShell({ children }: CheckoutShellProps) {
 
         {/* ── Checkout Panel ─── */}
         <div
-          className="relative z-50 flex flex-col overflow-hidden"
+          className="relative z-50 flex flex-col overflow-hidden h-[min(860px,calc(100dvh-32px))] min-h-[min(720px,calc(100dvh-32px))] max-h-[calc(100dvh-32px)]"
           style={{
             width: "var(--checkout-panel-w)",
-            maxHeight: "var(--checkout-panel-max-h)",
             borderRadius: "var(--checkout-radius-panel)",
             background: "var(--gf-surface-alt)",
             boxShadow:
